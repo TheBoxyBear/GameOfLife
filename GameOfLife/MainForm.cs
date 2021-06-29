@@ -148,7 +148,7 @@ namespace GameOfLife
             TableBoard.RowCount = board.Size.Width;
             TableBoard.ColumnCount = board.Size.Height;
 
-            int colRatio = 100 / TableBoard.ColumnCount, rowRatio = 100 / TableBoard.RowCount;
+            float colRatio = 100f / TableBoard.ColumnCount, rowRatio = 100f / TableBoard.RowCount;
             Padding cellMargin = new(0);
 
             // Initialize the CellPannel jagged array
