@@ -28,7 +28,7 @@ namespace GameOfLife
         {
             if (width < 1)
                 throw new ArgumentException("Width must be at least 1.");
-            if (width < 1)
+            if (height < 1)
                 throw new ArgumentException("Height must be at least 1.");
 
             Size = new(width, height);
