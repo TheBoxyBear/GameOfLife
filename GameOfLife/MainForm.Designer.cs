@@ -37,6 +37,7 @@ namespace GameOfLife
             this.Menu = new System.Windows.Forms.MenuStrip();
             this.Menu_StartStop = new System.Windows.Forms.ToolStripMenuItem();
             this.Menu_BoardSize = new System.Windows.Forms.ToolStripMenuItem();
+            this.Menu_Reset = new System.Windows.Forms.ToolStripMenuItem();
             this.TableBoard = new System.Windows.Forms.TableLayoutPanel();
             this.Timer = new System.Windows.Forms.Timer(this.components);
             Menu_Colors = new System.Windows.Forms.ToolStripMenuItem();
@@ -78,6 +79,7 @@ namespace GameOfLife
             // 
             this.Menu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.Menu_StartStop,
+            this.Menu_Reset,
             this.Menu_BoardSize,
             Menu_Colors});
             this.Menu.Location = new System.Drawing.Point(0, 0);
@@ -99,6 +101,13 @@ namespace GameOfLife
             this.Menu_BoardSize.Size = new System.Drawing.Size(72, 20);
             this.Menu_BoardSize.Text = "Board size";
             this.Menu_BoardSize.Click += new System.EventHandler(this.Menu_BoardSize_Click);
+            // 
+            // Menu_Reset
+            // 
+            this.Menu_Reset.Name = "Menu_Reset";
+            this.Menu_Reset.Size = new System.Drawing.Size(47, 20);
+            this.Menu_Reset.Text = "Reset";
+            this.Menu_Reset.Click += new System.EventHandler(this.Menu_Reset_Click);
             // 
             // TableBoard
             // 
@@ -145,6 +154,7 @@ namespace GameOfLife
         private System.Windows.Forms.ToolStripMenuItem Menu_Color_Dead;
         private System.Windows.Forms.ToolStripMenuItem Menu_Colors_Reset;
         private System.Windows.Forms.Timer Timer;
+        private System.Windows.Forms.ToolStripMenuItem Menu_Reset;
     }
 }
 

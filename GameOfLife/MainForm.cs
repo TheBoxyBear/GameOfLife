@@ -51,6 +51,13 @@ namespace GameOfLife
                 board.Cells[cell.CellLocation.X, cell.CellLocation.Y] = cell.IsAlive = !cell.IsAlive;
             }
         }
+        private void Menu_Reset_Click(object sender, EventArgs e)
+        {
+            StopSimulation();
+
+            foreach (CellPanel cell in cells.SelectMany(c => c))
+                board.Cells[cell.CellLocation.X, cell.CellLocation.Y] = cell.IsAlive = false;
+        }
         private void Timer_Tick(object sender, EventArgs e)
         {
             board.Cycle();
@@ -59,6 +66,7 @@ namespace GameOfLife
             foreach (CellPanel cell in cells.SelectMany(c => c))
                 cell.IsAlive = board.Cells[cell.CellLocation.X, cell.CellLocation.Y];
         }
+
 
         private void Menu_BoardSize_Click(object sender, EventArgs e)
         {
