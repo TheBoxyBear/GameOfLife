@@ -33,6 +33,8 @@ namespace GameOfLife
             this.HeightLabel = new System.Windows.Forms.Label();
             this.WidthInput = new System.Windows.Forms.NumericUpDown();
             this.HeightInput = new System.Windows.Forms.NumericUpDown();
+            this.btnOK = new System.Windows.Forms.Button();
+            this.btnCancel = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.WidthInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.HeightInput)).BeginInit();
             this.SuspendLayout();
@@ -58,6 +60,11 @@ namespace GameOfLife
             // WidthInput
             // 
             this.WidthInput.Location = new System.Drawing.Point(91, 26);
+            this.WidthInput.Maximum = new decimal(new int[] {
+            500,
+            0,
+            0,
+            0});
             this.WidthInput.Name = "WidthInput";
             this.WidthInput.Size = new System.Drawing.Size(120, 23);
             this.WidthInput.TabIndex = 2;
@@ -65,15 +72,44 @@ namespace GameOfLife
             // HeightInput
             // 
             this.HeightInput.Location = new System.Drawing.Point(91, 66);
+            this.HeightInput.Maximum = new decimal(new int[] {
+            500,
+            0,
+            0,
+            0});
             this.HeightInput.Name = "HeightInput";
             this.HeightInput.Size = new System.Drawing.Size(120, 23);
             this.HeightInput.TabIndex = 3;
+            // 
+            // btnOK
+            // 
+            this.btnOK.DialogResult = System.Windows.Forms.DialogResult.OK;
+            this.btnOK.Location = new System.Drawing.Point(91, 109);
+            this.btnOK.Name = "btnOK";
+            this.btnOK.Size = new System.Drawing.Size(75, 23);
+            this.btnOK.TabIndex = 4;
+            this.btnOK.Text = "OK";
+            this.btnOK.UseVisualStyleBackColor = true;
+            this.btnOK.Click += new System.EventHandler(this.Btn_Click);
+            // 
+            // btnCancel
+            // 
+            this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
+            this.btnCancel.Location = new System.Drawing.Point(184, 109);
+            this.btnCancel.Name = "btnCancel";
+            this.btnCancel.Size = new System.Drawing.Size(75, 23);
+            this.btnCancel.TabIndex = 5;
+            this.btnCancel.Text = "Cancel";
+            this.btnCancel.UseVisualStyleBackColor = true;
+            this.btnCancel.Click += new System.EventHandler(this.Btn_Click);
             // 
             // ResizeForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(261, 115);
+            this.ClientSize = new System.Drawing.Size(271, 144);
+            this.Controls.Add(this.btnCancel);
+            this.Controls.Add(this.btnOK);
             this.Controls.Add(this.HeightInput);
             this.Controls.Add(this.WidthInput);
             this.Controls.Add(this.HeightLabel);
@@ -83,7 +119,6 @@ namespace GameOfLife
             this.Name = "ResizeForm";
             this.ShowInTaskbar = false;
             this.Text = "Set board size";
-            this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.ResizeForm_FormClosed);
             ((System.ComponentModel.ISupportInitialize)(this.WidthInput)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.HeightInput)).EndInit();
             this.ResumeLayout(false);
@@ -97,5 +132,7 @@ namespace GameOfLife
         private System.Windows.Forms.NumericUpDown HeightInput;
         private System.Windows.Forms.Label WidthLabel;
         private System.Windows.Forms.Label HeightLabel;
+        private Button btnOK;
+        private Button btnCancel;
     }
 }
