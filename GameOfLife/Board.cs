@@ -121,7 +121,7 @@ public class Board
             {
                 if (presence.IsEmpty)
                     return false;
-                else if (--aliveCounts[position] == 0 && presence.Start == presence.End)
+                else if (--aliveCounts[position] == 0 && presence.Length == 0)
                 {
                     presence = new();
                     return false;

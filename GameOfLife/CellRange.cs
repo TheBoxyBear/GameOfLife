@@ -5,6 +5,7 @@ public readonly struct CellRange
     public readonly bool IsEmpty = true;
     public readonly int Start;
     public readonly int End;
+    public int Length => End - Start;
 
     public CellRange() { }
     public CellRange(int start, int end)
