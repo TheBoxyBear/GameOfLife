@@ -45,10 +45,10 @@
             this.Menu_Reset = new System.Windows.Forms.ToolStripMenuItem();
             this.Menu_BoardSize = new System.Windows.Forms.ToolStripMenuItem();
             this.Menu_ShowGrid = new System.Windows.Forms.ToolStripMenuItem();
-            this.panBoard = new System.Windows.Forms.Panel();
             this.Timer = new System.Windows.Forms.Timer(this.components);
             this.Status = new System.Windows.Forms.StatusStrip();
             this.Status_State = new System.Windows.Forms.ToolStripStatusLabel();
+            this.panBoard = new GameOfLife.BoardPanel();
             Menu_Colors = new System.Windows.Forms.ToolStripMenuItem();
             toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
@@ -182,21 +182,6 @@
             this.Menu_ShowGrid.Text = "Show Grid ✓";
             this.Menu_ShowGrid.Click += new System.EventHandler(this.Menu_ShowGrid_Click);
             // 
-            // panBoard
-            // 
-            this.panBoard.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.panBoard.BackColor = System.Drawing.SystemColors.Control;
-            this.panBoard.Location = new System.Drawing.Point(0, 24);
-            this.panBoard.Margin = new System.Windows.Forms.Padding(0);
-            this.panBoard.Name = "panBoard";
-            this.panBoard.Size = new System.Drawing.Size(686, 415);
-            this.panBoard.TabIndex = 2;
-            this.panBoard.Paint += new System.Windows.Forms.PaintEventHandler(this.panBoard_Paint);
-            this.panBoard.MouseDown += new System.Windows.Forms.MouseEventHandler(this.panBoard_MouseDown);
-            this.panBoard.MouseUp += new System.Windows.Forms.MouseEventHandler(this.panBoard_MouseUp);
-            // 
             // Timer
             // 
             this.Timer.Tick += new System.EventHandler(this.Timer_Tick);
@@ -217,19 +202,33 @@
             this.Status_State.Size = new System.Drawing.Size(76, 17);
             this.Status_State.Text = "Gen: 0 Pop: 0";
             // 
+            // panBoard
+            // 
+            this.panBoard.AliveColor = System.Drawing.Color.Empty;
+            this.panBoard.BackColor = System.Drawing.Color.White;
+            this.panBoard.DeadColor = System.Drawing.Color.Empty;
+            this.panBoard.GridColor = System.Drawing.Color.Empty;
+            this.panBoard.Location = new System.Drawing.Point(0, 24);
+            this.panBoard.Margin = new System.Windows.Forms.Padding(0);
+            this.panBoard.Name = "panBoard";
+            this.panBoard.ShowGrid = true;
+            this.panBoard.Size = new System.Drawing.Size(686, 412);
+            this.panBoard.TabIndex = 4;
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(686, 461);
-            this.Controls.Add(this.Status);
             this.Controls.Add(this.panBoard);
+            this.Controls.Add(this.Status);
             this.Controls.Add(this.Menu);
             this.MainMenuStrip = this.Menu;
             this.MaximizeBox = false;
             this.Name = "MainForm";
             this.Text = "Game of Life";
             this.ResizeEnd += new System.EventHandler(this.MainForm_ResizeEnd);
+            this.Resize += new System.EventHandler(this.MainForm_Resize);
             this.Menu.ResumeLayout(false);
             this.Menu.PerformLayout();
             this.Status.ResumeLayout(false);
@@ -240,7 +239,6 @@
         }
 
         #endregion
-        private Panel panBoard;
         private ToolStripMenuItem Menu_StartStop;
         private ToolStripMenuItem Menu_Reset;
         private ToolStripMenuItem Menu_BoardSize;
@@ -257,5 +255,6 @@
         private ToolStripMenuItem Menu_Color_Grid_Custom;
         private StatusStrip Status;
         private ToolStripStatusLabel Status_State;
+        private BoardPanel panBoard;
     }
 }
