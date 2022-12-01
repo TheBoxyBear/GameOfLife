@@ -2,7 +2,7 @@
 
 public partial class BoardPanel : Panel
 {
-    const int defaultBoardSize = 5;
+    const int defaultBoardSize = 100;
 
     private readonly SolidBrush aliveBrush, deadBrush;
     private readonly Pen gridPen;
@@ -185,8 +185,12 @@ public partial class BoardPanel : Panel
 
     public void Cycle()
     {
+        using var g = CreateGraphics();
+        void HandleChange(object? _, Point p) => UpdateCell(p.X, p.Y, g);
+
+        Board.CycleCellChanged += HandleChange;
         Board.Cycle();
-        UpdateBoard();
+        Board.CycleCellChanged -= HandleChange;
     }
 
     #region Drawing
@@ -235,16 +239,6 @@ public partial class BoardPanel : Panel
             for (int y = cellRegion.Top; y < cellRegion.Bottom && y < Board.Height; y++)
                 if (Board.Cells[x, y])
                     DrawAliveCell(x, y, g);
-    }
-
-    private void UpdateBoard()
-    {
-        using var g = CreateGraphics();
-
-        for (int x = 0; x < Board.Width; x++)
-            for (int y = 0; y < Board.Height; y++)
-                if (Board.OldCells[x, y] != Board.Cells[x, y])
-                    UpdateCell(x, y, g);
     }
 
     private void DrawAliveCell(int x, int y, Graphics g) => DrawCellBase(x, y, g, aliveBrush);
@@ -303,6 +297,7 @@ public partial class BoardPanel : Panel
     #endregion
 
     #region EventHandlers
+
     protected override void OnPaint(PaintEventArgs pe) => DrawBoardRegion(pe.ClipRectangle, pe.Graphics);
     protected override void OnMouseDown(MouseEventArgs e)
     {
@@ -327,6 +322,7 @@ public partial class BoardPanel : Panel
         if (cell == dragLastPosition || Board.Cells[cell.X, cell.Y] != dragInitialState)
             return;
 
+        dragLastPosition = e.Location;
         InvertCell(cell.X, cell.Y);
     }
     protected override void OnMouseUp(MouseEventArgs e) => dragging = false;

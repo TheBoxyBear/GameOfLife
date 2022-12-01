@@ -42,19 +42,24 @@ public partial class MainForm : Form
 
         panelFormOffset = new Size(Width - panBoard.Width, Height - panBoard.Height);
         panBoard.ResetColors(false);
-        panBoard.BackColor = Color.Red;
         AdjustSize();
         UpdateSizeText();
     }
 
     #region Sizing
-    private void AdjustSize() => Size = panBoard.AdjustSize(false) + panelFormOffset;
+    private void AdjustSize()
+    {
+        panBoard.AdjustSize(false);
+        SizeToPanel();
+    }
+    private void SizeToPanel() => Size = panBoard.Size + panelFormOffset;
     /// <summary>
     /// Sets the size of the board.
     /// </summary>
     private void SetBoardSize(int width, int height)
     {
         panBoard.Board = new(width, height);
+        SizeToPanel();
         UpdateSizeText();
     }
     private void UpdateSizeText() => Text = $"Game of Life ({panBoard.Board.Width}x{panBoard.Board.Height})";
@@ -125,6 +130,14 @@ public partial class MainForm : Form
             StopSimulation();
         else
             StartSimulation();
+    }
+
+    private void Menu_Speed_Click(object sender, EventArgs e)
+    {
+        using var frm = new SpeedForm(Timer.Interval);
+
+        if (frm.ShowDialog() == DialogResult.OK)
+            Timer.Interval = frm.TickRate;
     }
 
     private void Menu_Reset_Click(object sender, EventArgs e)

@@ -49,6 +49,7 @@
             this.Status = new System.Windows.Forms.StatusStrip();
             this.Status_State = new System.Windows.Forms.ToolStripStatusLabel();
             this.panBoard = new GameOfLife.BoardPanel();
+            this.Menu_Speed = new System.Windows.Forms.ToolStripMenuItem();
             Menu_Colors = new System.Windows.Forms.ToolStripMenuItem();
             toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
@@ -141,6 +142,7 @@
             // 
             this.Menu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.Menu_StartStop,
+            this.Menu_Speed,
             this.Menu_Reset,
             this.Menu_BoardSize,
             Menu_Colors,
@@ -203,17 +205,20 @@
             this.Status_State.Text = "Gen: 0 Pop: 0";
             // 
             // panBoard
-            // 
-            this.panBoard.AliveColor = System.Drawing.Color.Empty;
-            this.panBoard.BackColor = System.Drawing.Color.White;
-            this.panBoard.DeadColor = System.Drawing.Color.Empty;
-            this.panBoard.GridColor = System.Drawing.Color.Empty;
+            //
             this.panBoard.Location = new System.Drawing.Point(0, 24);
             this.panBoard.Margin = new System.Windows.Forms.Padding(0);
             this.panBoard.Name = "panBoard";
             this.panBoard.ShowGrid = true;
             this.panBoard.Size = new System.Drawing.Size(686, 412);
             this.panBoard.TabIndex = 4;
+            // 
+            // Menu_Speed
+            // 
+            this.Menu_Speed.Name = "Menu_Speed";
+            this.Menu_Speed.Size = new System.Drawing.Size(51, 20);
+            this.Menu_Speed.Text = "Speed";
+            this.Menu_Speed.Click += new System.EventHandler(this.Menu_Speed_Click);
             // 
             // MainForm
             // 
@@ -256,5 +261,6 @@
         private StatusStrip Status;
         private ToolStripStatusLabel Status_State;
         private BoardPanel panBoard;
+        private ToolStripMenuItem Menu_Speed;
     }
 }

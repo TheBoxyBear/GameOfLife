@@ -4,6 +4,8 @@ public class Board
 {
     private readonly int XLimit, YLimit;
 
+    public event EventHandler<Point> CycleCellChanged;
+
     /// <summary>
     /// Dimensions of the board in cell count
     /// </summary>
@@ -30,10 +32,9 @@ public class Board
     public bool[,] OldCells { get; private set; }
 
     #region Optimization
-    private CellRange[] oldColumnPresences;
-    private CellRange[] columnPresences;
-    private CellRange rowPresence;
-    private readonly int[] rowAliveCounts;
+    private bool cycling = false;
+    private CellRange rowPresence = new(), columnPresence = new();
+    private readonly int[] rowAliveCounts, columnAliveCounts;
     #endregion
 
     /// <summary>
@@ -48,19 +49,8 @@ public class Board
         Cells = new bool[size.Width, size.Height];
         OldCells = new bool[size.Width, size.Height];
 
-        oldColumnPresences = CreatePresences(); ;
-        columnPresences = CreatePresences();
         rowAliveCounts = new int[Height];
-
-        CellRange[] CreatePresences()
-        {
-            var presences = new CellRange[Width];
-
-            for (int i = 0; i < presences.Length; i++)
-                presences[i] = new();
-
-            return presences;
-        }
+        columnAliveCounts = new int[Width];
     }
 
     /// <summary>
@@ -84,6 +74,9 @@ public class Board
     {
         Cells[x, y] = state;
         UpdatePopulation(x, y, state);
+
+        if (cycling)
+            CycleCellChanged?.Invoke(this, new(x, y));
     }
     /// <summary>
     /// Inverts the state of a cell and updates the population.
@@ -95,53 +88,55 @@ public class Board
     /// </summary>
     private void UpdatePopulation(int x, int y, bool newState)
     {
-        var updateColumnPresence = true;
-        var updateRowPresence = true;
+        bool updateRowPresence, updateColumnPresence;
 
         if (newState)
         {
             Population++;
-            rowAliveCounts[y]++;
 
-            if (rowPresence.IsEmpty)
-            {
-                rowPresence = new(y, y);
-                updateRowPresence = false;
-            }
+            updateColumnPresence = PreUpdate(x, ref columnPresence, columnAliveCounts);
+            updateRowPresence = PreUpdate(y, ref rowPresence, rowAliveCounts);
 
-            if (columnPresences[x].IsEmpty)
+            bool PreUpdate(int position, ref CellRange presence, int[] aliveCounts)
             {
-                columnPresences[x] = new(y, y);
-                updateColumnPresence = false;
+                aliveCounts[position]++;
+
+                if (presence.IsEmpty)
+                {
+                    presence = new(position, position);
+                    return false;
+                }
+
+                return true;
             }
         }
         else
         {
             Population--;
 
-            if (rowPresence.IsEmpty)
-                updateRowPresence = false;
-            else if (--rowAliveCounts[y] == 0 && rowPresence.Start == rowPresence.End)
-            {
-                rowPresence = new();
-                updateRowPresence = false;
-            }
+            updateColumnPresence = PreUpdate(x, ref columnPresence, columnAliveCounts);
+            updateRowPresence = PreUpdate(y, ref rowPresence, rowAliveCounts);
 
-            if (columnPresences[x].IsEmpty)
-                updateColumnPresence = false;
-            else if (columnPresences[x].Start == columnPresences[x].End)
+            bool PreUpdate(int position, ref CellRange presence, int[] aliveCounts)
             {
-                columnPresences[x] = new();
-                updateColumnPresence = false;
+                if (presence.IsEmpty)
+                    return false;
+                else if (--aliveCounts[position] == 0 && presence.Start == presence.End)
+                {
+                    presence = new();
+                    return false;
+                }
+
+                return true;
             }
         }
 
         if (updateColumnPresence)
-            UpdatePresence(ref columnPresences[x], y, y => Cells[x, y]);
+            UpdatePresence(x, ref columnPresence, columnAliveCounts);
         if (updateRowPresence)
-            UpdatePresence(ref rowPresence, y, y => rowAliveCounts[y] > 0);
+            UpdatePresence(y, ref rowPresence, rowAliveCounts);
 
-        static void UpdatePresence(ref CellRange presence, int position, Func<int, bool> isLimit)
+        static void UpdatePresence(int position, ref CellRange presence, int[] aliveCounts)
         {
             var checkStart = presence.Start;
             var checkEnd = presence.End;
@@ -153,19 +148,24 @@ public class Board
             else
                 return;
 
-            for (int i = checkStart; i <= checkEnd; i++)
-                if (isLimit(i))
-                {
-                    checkStart = i;
-                    break;
+            unchecked
+            {
+                // Find start
+                for (int i = checkStart; i <= checkEnd; i++)
+                    if (aliveCounts[i] > 0)
+                    {
+                        checkStart = i;
+                        break;
 
-                }
-            for (int i = checkEnd; i >= checkStart; i--)
-                if (isLimit(i))
-                {
-                    checkEnd = i;
-                    break;
-                }
+                    }
+                // Find end
+                for (int i = checkEnd; i >= checkStart; i--)
+                    if (aliveCounts[i] > 0)
+                    {
+                        checkEnd = i;
+                        break;
+                    }
+            }
 
             presence = new(checkStart, checkEnd);
         }
@@ -181,18 +181,19 @@ public class Board
         if (rowPresence.IsEmpty)
             return;
 
-        var oldRowPresence = rowPresence;
+        cycling = true;
+
         Array.Copy(Cells, OldCells, Width * Height);
-        Array.Copy(columnPresences, oldColumnPresences, oldColumnPresences.Length);
 
-        //var xCheck = SetLimits(rowPresence, XLimit, update);
+        var yCheck = SetLimits(rowPresence, XLimit, CheckRow);
 
-        for (int x = 0; x < Width; x++)
-            for (int y = 0; y < Height; y++)
-                CheckSetCell(x, y);
+        unchecked
+        {
+            for (int y = yCheck.Start; y <= yCheck.End; y++)
+                CheckRow(y);
+        }
 
-        //for (int x = xCheck.Start; x <= xCheck.End; x++)
-        //    CheckColumn(x, update);
+        cycling = false;
 
         void CheckSetCell(int x, int y)
         {
@@ -209,10 +210,15 @@ public class Board
                     break;
             }
         }
-        void CheckColumn(int x)
+        void CheckRow(int y)
         {
-            for (int y = 0; y < Width; y++)
-                CheckSetCell(x, y);
+            var xCheck = SetLimits(columnPresence, YLimit, x => CheckSetCell(x, y));
+
+            unchecked
+            {
+                for (int x = xCheck.Start; x <= xCheck.End; x++)
+                    CheckSetCell(x, y);
+            }
         }
         int LivingNeighbours(int x, int y)
         {
@@ -241,14 +247,14 @@ public class Board
 
             return aliveCount;
         }
-        CellRange SetLimits(CellRange presence, int limit)
+        CellRange SetLimits(CellRange presence, int limit, Action<int> preliminaryCheck)
         {
             var checkStart = presence.Start - 1;
             var checkEnd = presence.End + 1;
 
             if (checkStart == -1)
             {
-                CheckColumn(limit);
+                preliminaryCheck(limit);
                 checkStart = 0;
 
                 if (checkEnd == limit)
@@ -259,7 +265,7 @@ public class Board
             }
             if (checkEnd == limit + 1)
             {
-                CheckColumn(0);
+                preliminaryCheck(0);
 
                 if (checkStart == 0)
                     checkStart = 1;

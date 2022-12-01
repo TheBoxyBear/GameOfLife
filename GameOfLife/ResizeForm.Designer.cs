@@ -61,25 +61,27 @@ namespace GameOfLife
             // 
             this.WidthInput.Location = new System.Drawing.Point(91, 26);
             this.WidthInput.Maximum = new decimal(new int[] {
-            500,
+            1000,
             0,
             0,
             0});
             this.WidthInput.Name = "WidthInput";
             this.WidthInput.Size = new System.Drawing.Size(120, 23);
             this.WidthInput.TabIndex = 2;
+            this.WidthInput.ThousandsSeparator = true;
             // 
             // HeightInput
             // 
             this.HeightInput.Location = new System.Drawing.Point(91, 66);
             this.HeightInput.Maximum = new decimal(new int[] {
-            500,
+            1000,
             0,
             0,
             0});
             this.HeightInput.Name = "HeightInput";
             this.HeightInput.Size = new System.Drawing.Size(120, 23);
             this.HeightInput.TabIndex = 3;
+            this.HeightInput.ThousandsSeparator = true;
             // 
             // btnOK
             // 
