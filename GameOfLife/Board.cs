@@ -185,7 +185,7 @@ public class Board
 
         Array.Copy(Cells, OldCells, Width * Height);
 
-        var yCheck = SetLimits(rowPresence, XLimit, CheckRow);
+        var yCheck = SetLimits(rowPresence, YLimit, CheckRow);
 
         unchecked
         {
@@ -212,7 +212,12 @@ public class Board
         }
         void CheckRow(int y)
         {
-            var xCheck = SetLimits(columnPresence, YLimit, x => CheckSetCell(x, y));
+            if (rowAliveCounts[y] == 0
+                && columnAliveCounts[WarpIndex(y - 1, YLimit)] == 0
+                && columnAliveCounts[WarpIndex(y + 1, YLimit)] == 0)
+                return;
+
+            var xCheck = SetLimits(columnPresence, XLimit, x => CheckSetCell(x, y));
 
             unchecked
             {
@@ -222,30 +227,33 @@ public class Board
         }
         int LivingNeighbours(int x, int y)
         {
-            var aliveCount = 0;
-            var left = x > 0 ? x - 1 : XLimit;
-            var right = x < XLimit ? x + 1 : 0;
-            var top = y > 0 ? y - 1 : YLimit;
-            var bottom = y < YLimit ? y + 1 : 0;
+            unchecked
+            {
+                var aliveCount = 0;
+                var left = x > 0 ? x - 1 : XLimit;
+                var right = x < XLimit ? x + 1 : 0;
+                var top = y > 0 ? y - 1 : YLimit;
+                var bottom = y < YLimit ? y + 1 : 0;
 
-            if (OldCells[left, y])
-                aliveCount++;
-            if (OldCells[left, top])
-                aliveCount++;
-            if (OldCells[left, bottom])
-                aliveCount++;
-            if (OldCells[right, y])
-                aliveCount++;
-            if (OldCells[right, top])
-                aliveCount++;
-            if (OldCells[right, bottom])
-                aliveCount++;
-            if (OldCells[x, top])
-                aliveCount++;
-            if (OldCells[x, bottom])
-                aliveCount++;
+                if (OldCells[left, y])
+                    aliveCount++;
+                if (OldCells[left, top])
+                    aliveCount++;
+                if (OldCells[left, bottom])
+                    aliveCount++;
+                if (OldCells[right, y])
+                    aliveCount++;
+                if (OldCells[right, top])
+                    aliveCount++;
+                if (OldCells[right, bottom])
+                    aliveCount++;
+                if (OldCells[x, top])
+                    aliveCount++;
+                if (OldCells[x, bottom])
+                    aliveCount++;
 
-            return aliveCount;
+                return aliveCount;
+            }
         }
         CellRange SetLimits(CellRange presence, int limit, Action<int> preliminaryCheck)
         {
@@ -259,7 +267,7 @@ public class Board
 
                 if (checkEnd == limit)
                 {
-                    checkEnd = XLimit - 1;
+                    checkEnd = limit - 1;
                     return new(checkStart, checkEnd);
                 }
             }
@@ -275,5 +283,6 @@ public class Board
 
             return new(checkStart, checkEnd);
         }
+        int WarpIndex(int index, int limit) => index > limit ? 0 : index == -1 ? limit : index;
     }
 }
