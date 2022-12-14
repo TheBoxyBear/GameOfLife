@@ -4,7 +4,7 @@ public class Board
 {
     private readonly int XLimit, YLimit;
 
-    public event EventHandler<Point> CycleCellChanged;
+    public event EventHandler<Point>? CycleCellChanged;
 
     /// <summary>
     /// Dimensions of the board in cell count
@@ -212,15 +212,15 @@ public class Board
         }
         void CheckRow(int y)
         {
-            if (rowAliveCounts[y] == 0
-                && columnAliveCounts[WarpIndex(y - 1, YLimit)] == 0
-                && columnAliveCounts[WarpIndex(y + 1, YLimit)] == 0)
-                return;
-
-            var xCheck = SetLimits(columnPresence, XLimit, x => CheckSetCell(x, y));
-
             unchecked
             {
+                if (rowAliveCounts[y] == 0
+                && columnAliveCounts[WarpIndex(y - 1, YLimit)] == 0
+                && columnAliveCounts[WarpIndex(y + 1, YLimit)] == 0)
+                    return;
+
+                var xCheck = SetLimits(columnPresence, XLimit, x => CheckSetCell(x, y));
+
                 for (int x = xCheck.Start; x <= xCheck.End; x++)
                     CheckSetCell(x, y);
             }

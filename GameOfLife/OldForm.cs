@@ -37,7 +37,7 @@ public partial class OldForm : Form
         else
             StartSimulation();
     }
-    private void Cell_Click(object sender, EventArgs e)
+    private void Cell_Click(object? sender, EventArgs e)
     {
         if (!simulationRunning)
         {
