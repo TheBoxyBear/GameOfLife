@@ -31,6 +31,8 @@ public class Board
     /// </summary>
     public bool[,] OldCells { get; private set; }
 
+    private bool[,] searchZone, oldSearchZone;
+
     #region Optimization
     private bool cycling = false;
     private CellRange rowPresence = new(), columnPresence = new();
@@ -48,6 +50,8 @@ public class Board
 
         Cells = new bool[size.Width, size.Height];
         OldCells = new bool[size.Width, size.Height];
+        searchZone = new bool[size.Width, size.Height];
+        oldSearchZone = new bool[size.Width, size.Height];
 
         rowAliveCounts = new int[Height];
         columnAliveCounts = new int[Width];
@@ -58,30 +62,24 @@ public class Board
     /// </summary>
     public Board(int width, int height) : this(new(width, height)) { }
 
-    /// <summary>
-    /// Sets the state of a cell and updates the population.
-    /// </summary>
-    public void SetCell(int x, int y, bool state)
-    {
-        var oldState = Cells[x, y];
-
-        if (oldState == state)
-            return;
-
-        SetCellUnsafe(x, y, state);
-    }
     private void SetCellUnsafe(int x, int y, bool state)
     {
         Cells[x, y] = state;
-        UpdatePopulation(x, y, state);
+        //UpdatePopulation(x, y, state);
+        UpdateSearchZone(x, y);
 
-        if (cycling)
-            CycleCellChanged?.Invoke(this, new(x, y));
+        //if (cycling)
+        //    CycleCellChanged?.Invoke(this, new(x, y));
     }
     /// <summary>
     /// Inverts the state of a cell and updates the population.
     /// </summary>
-    public void InvertCell(int x, int y) => UpdatePopulation(x, y, Cells[x, y] = !Cells[x, y]);
+    public void InvertCell(int x, int y)
+    {
+        Cells[x, y] = !Cells[x, y];
+        //UpdatePopulation(x, y, Cells[x, y] = !Cells[x, y]);
+        UpdateSearchZone(x, y);
+    }
 
     /// <summary>
     /// Updates the population and counts after a cell change.
@@ -167,6 +165,25 @@ public class Board
             presence = new(checkStart, checkEnd);
         }
     }
+    private void UpdateSearchZone(int x, int y)
+    {
+        var left = x > 0 ? x - 1 : XLimit;
+        var right = x < XLimit ? x + 1 : 0;
+        var top = y > 0 ? y - 1 : YLimit;
+        var bottom = y < YLimit ? y + 1 : 0;
+
+        searchZone[x, y] = true;
+
+        searchZone[left, y] = true;
+        searchZone[right, y] = true;
+        searchZone[x, top] = true;
+        searchZone[x, bottom] = true;
+
+        searchZone[left, top] = true;
+        searchZone[left, bottom] = true;
+        searchZone[right, top] = true;
+        searchZone[left, bottom] = true;
+    }
 
     /// <summary>
     /// Updates the living state of all cells
@@ -175,25 +192,40 @@ public class Board
     {
         Generation++;
 
-        if (rowPresence.IsEmpty)
-            return;
+
+        //if (rowPresence.IsEmpty)
+        //    return;
 
         cycling = true;
 
+        Array.Copy(searchZone, oldSearchZone, Width * Height);
         Array.Copy(Cells, OldCells, Width * Height);
 
-        var yCheck = SetLimits(rowPresence, YLimit, CheckRow);
+        searchZone = new bool[Width, Height];
+
+        //var yCheck = SetLimits(rowPresence, YLimit, CheckRow);
+
+        //unchecked
+        //{
+        //    for (int y = yCheck.Start; y <= yCheck.End; y++)
+        //        CheckRow(y);
+        //}
 
         unchecked
         {
-            for (int y = yCheck.Start; y <= yCheck.End; y++)
+            for (int y = 0; y < YLimit; y++)
                 CheckRow(y);
         }
 
         cycling = false;
 
+
+
         void CheckSetCell(int x, int y)
         {
+            if (!oldSearchZone[x, y])
+                return;
+
             var n = LivingNeighbours(x, y);
 
             switch (n)
@@ -209,16 +241,22 @@ public class Board
         }
         void CheckRow(int y)
         {
+            //unchecked
+            //{
+            //    if (rowAliveCounts[y] == 0
+            //    && columnAliveCounts[WarpIndex(y - 1, YLimit)] == 0
+            //    && columnAliveCounts[WarpIndex(y + 1, YLimit)] == 0)
+            //        return;
+
+            //    var xCheck = SetLimits(columnPresence, XLimit, x => CheckSetCell(x, y));
+
+            //    for (int x = xCheck.Start; x <= xCheck.End; x++)
+            //        CheckSetCell(x, y);
+            //}
+
             unchecked
             {
-                if (rowAliveCounts[y] == 0
-                && columnAliveCounts[WarpIndex(y - 1, YLimit)] == 0
-                && columnAliveCounts[WarpIndex(y + 1, YLimit)] == 0)
-                    return;
-
-                var xCheck = SetLimits(columnPresence, XLimit, x => CheckSetCell(x, y));
-
-                for (int x = xCheck.Start; x <= xCheck.End; x++)
+                for (int x = 0; x <= XLimit; x++)
                     CheckSetCell(x, y);
             }
         }
