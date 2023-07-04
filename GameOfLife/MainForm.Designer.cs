@@ -187,6 +187,7 @@
             // Timer
             // 
             this.Timer.Tick += new System.EventHandler(this.Timer_Tick);
+            this.Timer.Interval = 1;
             // 
             // Status
             // 
@@ -223,6 +224,7 @@
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
+            this.KeyPreview = true;
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(686, 461);
             this.Controls.Add(this.panBoard);

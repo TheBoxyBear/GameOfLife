@@ -2,14 +2,16 @@
 
 public partial class BoardPanel : Panel
 {
+    public enum DragDirection : byte { Unknown, Vertical, Horizontal }
+
     const int defaultBoardSize = 100;
 
     private readonly SolidBrush aliveBrush, deadBrush;
     private readonly Pen gridPen;
     private Size oldSize;
     private Point dragLastPosition;
-    private bool dragInitialState;
-    private bool dragging;
+    private bool dragInitialState, dragging, dragLocked;
+    private DragDirection dragLockDirection;
 
     public Board Board
     {
@@ -143,16 +145,11 @@ public partial class BoardPanel : Panel
     #region Sizing
     public Size AdjustSize(bool erase)
     {
-        // If only one dimension changed, base the cell size on that dimension
-        if (oldSize.Width != Width)
-        {
-            if (oldSize.Height == Height)
-                CellSize = Width / Board.Width;
-            else
-                UnbiasedResize();
-        }
-        else if (oldSize.Height != Height)
-            CellSize = Height / Board.Height;
+        var xChanged = oldSize.Width != Width;
+        var yChanged = oldSize.Height != Height;
+
+        if (xChanged ^ yChanged) // If only one dimension changed, base the cell size on that dimension
+            CellSize = xChanged ? Width / Board.Width : Height / Board.Height;
         else
             UnbiasedResize();
 
@@ -162,7 +159,12 @@ public partial class BoardPanel : Panel
         oldSize = Size = new(Board.Width * CellSize, Board.Height * CellSize);
 
         if (erase)
+        {
             Erase();
+
+            if (ShowGrid)
+                DrawGrid();
+        }
         else
             DrawBoard();
 
@@ -197,31 +199,27 @@ public partial class BoardPanel : Panel
     /// <summary>
     /// Erases the board.
     /// </summary>
-    private void Erase()
+    private void Erase(Graphics? g = null)
     {
-        using var g = CreateGraphics();
-        Erase(g);
+        var graphics = g ?? CreateGraphics();
+        graphics.FillRectangle(deadBrush, new(Point.Empty, Size));
 
-        if (ShowGrid)
-            DrawGrid();
+        if (g is null)
+            graphics.Dispose();
     }
-    /// <summary>
-    /// Erases the board using an existing <see cref="Graphics"/> instance.
-    /// </summary>
-    private void Erase(Graphics g) => g.FillRectangle(deadBrush, new(Point.Empty, Size));
 
     /// <summary>
     /// Erases and fully draws the current board state.
     /// </summary>
-    private void DrawBoard()
+    private void DrawBoard(Graphics? g = null)
     {
-        using var g = CreateGraphics();
-        DrawBoard(g);
+        var graphics = g ?? CreateGraphics();
+        DrawBoardRegion(new(Point.Empty, Size), graphics);
+
+        if (g is null)
+            graphics.Dispose();
     }
-    /// <summary>
-    /// Fully draws the current board state using an existing <see cref="Graphics"/> instance.
-    /// </summary>
-    private void DrawBoard(Graphics g) => DrawBoardRegion(new(Point.Empty, Size), g);
+
     /// <summary>
     /// Draws a region of the board state using an existing <see cref="Graphics"/> instance.
     /// </summary>
@@ -251,7 +249,7 @@ public partial class BoardPanel : Panel
         var width = CellSize;
         var height = CellSize;
 
-        if (ShowGrid)
+        if (ShowGrid) // Draw the cell one pixel thiner in every direction to not cover the gird.
         {
             x++;
             y++;
@@ -278,6 +276,7 @@ public partial class BoardPanel : Panel
 
     /// <summary>
     /// Draws the full grid.
+    /// </summary>
     private void DrawGrid()
     {
         using var g = CreateGraphics();
@@ -289,15 +288,14 @@ public partial class BoardPanel : Panel
     /// <param name="cellRegion">Region to draw in cells</param>
     private void DrawGridRegion(Rectangle cellRegion, Graphics g)
     {
-        for (int x = cellRegion.Left; x <= cellRegion.Right; x++)
+        for (int x = cellRegion.Left; x <= cellRegion.Right; x += 2)
             g.DrawRectangle(gridPen, x * CellSize, 0, CellSize, cellRegion.Bottom * CellSize);
-        for (int y = cellRegion.Top; y <= cellRegion.Bottom; y++)
+        for (int y = cellRegion.Top; y <= cellRegion.Bottom; y += 2)
             g.DrawRectangle(gridPen, 0, y * CellSize, cellRegion.Right * CellSize, CellSize);
     }
     #endregion
 
     #region EventHandlers
-
     protected override void OnPaint(PaintEventArgs pe) => DrawBoardRegion(pe.ClipRectangle, pe.Graphics);
     protected override void OnMouseDown(MouseEventArgs e)
     {
@@ -316,20 +314,49 @@ public partial class BoardPanel : Panel
 
         var cell = MapPixelToCell(e.Location);
 
+
         if (cell.X < 0 || cell.X > Board.Width - 1 || cell.Y < 0 || cell.Y > Board.Height - 1)
             return;
 
         if (cell == dragLastPosition || Board.Cells[cell.X, cell.Y] != dragInitialState)
             return;
 
-        dragLastPosition = e.Location;
+        if (dragLocked)
+        {
+            switch (dragLockDirection)
+            {
+                case DragDirection.Unknown:
+                    if (cell.X == dragLastPosition.X)
+                        dragLockDirection = DragDirection.Vertical;
+                    else if (cell.Y == dragLastPosition.Y)
+                        dragLockDirection = DragDirection.Horizontal;
+                    break;
+                case DragDirection.Horizontal:
+                    cell = new(cell.X, dragLastPosition.Y);
+                    break;
+                case DragDirection.Vertical:
+                    cell = new(dragLastPosition.X, cell.Y);
+                    break;
+            }
+        }
+
+        dragLastPosition = cell;
         InvertCell(cell.X, cell.Y);
     }
     protected override void OnMouseUp(MouseEventArgs e) => dragging = false;
 
-    protected override void OnControlRemoved(ControlEventArgs e)
+    protected override void OnKeyDown(KeyEventArgs e)
     {
-        base.OnControlRemoved(e);
+        if (e.KeyCode == Keys.LShiftKey)
+            dragLocked = true;
+    }
+    protected override void OnKeyUp(KeyEventArgs e)
+    {
+        if (e.KeyCode == Keys.LShiftKey)
+        {
+            dragLocked = false;
+            dragLockDirection = DragDirection.Unknown;
+        }
     }
     #endregion
 

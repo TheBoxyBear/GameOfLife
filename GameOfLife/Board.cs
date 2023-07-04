@@ -101,13 +101,11 @@ public class Board
             {
                 aliveCounts[position]++;
 
-                if (presence.IsEmpty)
-                {
-                    presence = new(position, position);
-                    return false;
-                }
+                if (!presence.IsEmpty)
+                    return true;
 
-                return true;
+                presence = new(position, position);
+                return false;
             }
         }
         else
@@ -121,13 +119,12 @@ public class Board
             {
                 if (presence.IsEmpty)
                     return false;
-                else if (--aliveCounts[position] == 0 && presence.Length == 0)
-                {
-                    presence = new();
-                    return false;
-                }
 
-                return true;
+                if (--aliveCounts[position] != 0 || presence.Length != 0)
+                    return true;
+
+                presence = new();
+                return false;
             }
         }
 
