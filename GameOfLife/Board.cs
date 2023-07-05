@@ -75,6 +75,7 @@ public class Board
     public void InvertCell(int x, int y)
     {
         Cells[x, y] = !Cells[x, y];
+        searchZone[x, y] = true;
         UpdateSearchZone(x, y);
     }
 
@@ -84,8 +85,6 @@ public class Board
         var right = WrapIndex(x + 1, XLimit);
         var top = WrapIndex(y - 1, YLimit);
         var bottom = WrapIndex(y + 1, YLimit);
-
-        searchZone[x, y] = true;
 
         searchZone[left, y] = true;
         searchZone[right, y] = true;
