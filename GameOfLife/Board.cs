@@ -1,6 +1,4 @@
-﻿using System.Security.Permissions;
-
-namespace GameOfLife;
+﻿namespace GameOfLife;
 
 public class Board
 {
