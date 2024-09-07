@@ -60,7 +60,7 @@ public partial class BoardPanel : D2DControl
                 return;
 
             aliveBrush.Color = D2DColor.FromGDIColor(value);
-            DrawBoard();
+            Render(DrawBoard);
         }
     }
 
@@ -74,7 +74,7 @@ public partial class BoardPanel : D2DControl
                 return;
 
             deadBrush.Color = D2DColor.FromGDIColor(value);
-            DrawBoard();
+            Render(DrawBoard);
         }
     }
 
@@ -89,7 +89,7 @@ public partial class BoardPanel : D2DControl
             //gridPen.Color = D2DColor.FromGDIColor(value);
 
             if (ShowGrid)
-                DrawGrid();
+                Render(DrawGrid);
         }
     }
     #endregion
@@ -112,7 +112,7 @@ public partial class BoardPanel : D2DControl
         //gridPen.Color = D2DColor.FromGDIColor(grid);
 
         if (redraw)
-            DrawBoard();
+            Render(DrawBoard);
     }
     public void ResetColors(bool redraw = true) => SetAllColors(DefaultAliveColor, DefaultDeadColor, DefaultGridColor, redraw);
 
@@ -247,6 +247,20 @@ public partial class BoardPanel : D2DControl
         graphics?.FillRectangle(new D2DRect(x, y, width, height), brush);
     }
 
+    private void InvertCell(int x, int y)
+    {
+        Board.InvertCell(x, y);
+        Render(() => UpdateCell(Math.Clamp(x, 0, Board.Width - 1), Math.Clamp(y, 0, Board.Height - 1)));
+    }
+
+    private void UpdateCell(int x, int y)
+    {
+        if (Board.Cells[x, y])
+            DrawAliveCell(x, y);
+        else
+            DrawDeadCell(x, y);
+    }
+
     /// <summary>
     /// Draws the full grid.
     /// </summary>
@@ -254,6 +268,7 @@ public partial class BoardPanel : D2DControl
     {
         DrawGridRegion(new(Point.Empty, Board.Size));
     }
+
     /// <summary>
     /// Draws the grid in a region of the panel.
     /// </summary>
@@ -285,17 +300,15 @@ public partial class BoardPanel : D2DControl
 
         dragInitialState = Board.Cells[cell.X, cell.Y];
 
-        Board.InvertCell(cell.X, cell.Y);
-
-        Render(DrawBoard);
+        InvertCell(cell.X, cell.Y);
     }
+
     protected override void OnMouseMove(MouseEventArgs e)
     {
         if (!dragging)
             return;
 
         var cell = MapPixelToCell(e.Location);
-
 
         if (cell.X < 0 || cell.X > Board.Width - 1 || cell.Y < 0 || cell.Y > Board.Height - 1)
             return;
@@ -326,8 +339,9 @@ public partial class BoardPanel : D2DControl
 
         Board.InvertCell(cell.X, cell.Y);
 
-        Render(DrawBoard);
+        Render(() => DrawCellBase(cell.X, cell.Y, Board.Cells[cell.X, cell.Y] ? aliveBrush : deadBrush));
     }
+
     protected override void OnMouseUp(MouseEventArgs e) => dragging = false;
 
     protected override void OnKeyDown(KeyEventArgs e)
@@ -335,6 +349,7 @@ public partial class BoardPanel : D2DControl
         if (e.KeyCode == Keys.LShiftKey)
             dragLocked = true;
     }
+
     protected override void OnKeyUp(KeyEventArgs e)
     {
         if (e.KeyCode == Keys.LShiftKey)
