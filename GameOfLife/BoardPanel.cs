@@ -27,7 +27,7 @@ public partial class BoardPanel : D2DControl
                 return;
 
             _board = value!;
-            AdjustSize(true);
+            AdjustSize();
         }
     }
     private Board _board;
@@ -41,10 +41,7 @@ public partial class BoardPanel : D2DControl
         {
             _showGrid = value;
 
-            if (value)
-                DrawGrid();
-            else
-                DrawBoard();
+            Render(value ? DrawGrid : DrawBoard);
         }
     }
     private bool _showGrid = true;
@@ -148,7 +145,7 @@ public partial class BoardPanel : D2DControl
     #endregion
 
     #region Sizing
-    public Size AdjustSize(bool erase)
+    public Size AdjustSize()
     {
         var xChanged = oldSize.Width != Width;
         var yChanged = oldSize.Height != Height;
@@ -163,15 +160,13 @@ public partial class BoardPanel : D2DControl
 
         oldSize = Size = new(Board.Width * CellSize, Board.Height * CellSize);
 
-        if (erase)
+        Render(() =>
         {
-            Erase();
-
             if (ShowGrid)
                 DrawGrid();
-        }
-        else
+
             DrawBoard();
+        });
 
         return Size;
 
@@ -193,30 +188,23 @@ public partial class BoardPanel : D2DControl
     public void Cycle()
     {
         Board.Cycle();
-        DrawBoard();
+        Render(DrawBoard);
     }
 
     #region Drawing
-    /// <summary>
-    /// Erases the board.
-    /// </summary>
-    private void Erase()
+    private void Render(Action renderAction)
     {
-        graphics?.FillRectangle(new D2DRect(0f, 0f, Size.Width, Size.Height), deadBrush);
+        graphics?.BeginRender();
+        renderAction();
+        graphics?.EndRender();
     }
 
     /// <summary>
     /// Erases and fully draws the current board state.
     /// </summary>
-    private void DrawBoard(bool partialRender = false)
+    private void DrawBoard()
     {
-        if (!partialRender)
-            graphics?.BeginRender();
-
         DrawBoardRegion(new Rectangle(Point.Empty, Size));
-
-        if (!partialRender)
-            graphics?.EndRender();
     }
 
     /// <summary>
@@ -262,15 +250,9 @@ public partial class BoardPanel : D2DControl
     /// <summary>
     /// Draws the full grid.
     /// </summary>
-    private void DrawGrid(bool partialRender = false)
+    private void DrawGrid()
     {
-        if (!partialRender)
-            graphics?.BeginRender();
-
         DrawGridRegion(new(Point.Empty, Board.Size));
-
-        if (!partialRender)
-            graphics?.EndRender();
     }
     /// <summary>
     /// Draws the grid in a region of the panel.
@@ -290,12 +272,8 @@ public partial class BoardPanel : D2DControl
     {
         graphics ??= g;
 
-        g?.BeginRender();
-
-        DrawGrid(true);
-        DrawBoard(true);
-
-        g?.EndRender();
+        DrawGrid();
+        DrawBoard();
     }
 
     protected override void OnMouseDown(MouseEventArgs e)
@@ -309,7 +287,7 @@ public partial class BoardPanel : D2DControl
 
         Board.InvertCell(cell.X, cell.Y);
 
-        DrawBoard();
+        Render(DrawBoard);
     }
     protected override void OnMouseMove(MouseEventArgs e)
     {
@@ -347,8 +325,8 @@ public partial class BoardPanel : D2DControl
         dragLastPosition = cell;
 
         Board.InvertCell(cell.X, cell.Y);
-        DrawBoard();
 
+        Render(DrawBoard);
     }
     protected override void OnMouseUp(MouseEventArgs e) => dragging = false;
 

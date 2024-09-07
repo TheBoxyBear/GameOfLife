@@ -49,7 +49,7 @@ public partial class MainForm : Form
     #region Sizing
     private void AdjustSize()
     {
-        panBoard.AdjustSize(false);
+        panBoard.AdjustSize();
         SizeToPanel();
     }
     private void SizeToPanel() => Size = panBoard.Size + panelFormOffset;
