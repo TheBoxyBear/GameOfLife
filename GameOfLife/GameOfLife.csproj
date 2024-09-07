@@ -8,4 +8,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="unvell.D2DLib-x64" Version="1.5.0" />
+  </ItemGroup>
+
 </Project>

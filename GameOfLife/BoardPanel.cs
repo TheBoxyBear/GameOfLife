@@ -1,13 +1,18 @@
-﻿namespace GameOfLife;
+﻿using unvell.D2DLib;
+using unvell.D2DLib.WinForm;
 
-public partial class BoardPanel : Panel
+namespace GameOfLife;
+
+public partial class BoardPanel : D2DControl
 {
     public enum DragDirection : byte { Unknown, Vertical, Horizontal }
 
     const int defaultBoardSize = 100;
 
-    private readonly SolidBrush aliveBrush, deadBrush;
-    private readonly Pen gridPen;
+    private readonly D2DSolidColorBrush aliveBrush, deadBrush;
+    private readonly D2DPen gridPen;
+    private D2DGraphics? graphics;
+
     private Size oldSize;
     private Point dragLastPosition;
     private bool dragInitialState, dragging, dragLocked;
@@ -51,13 +56,13 @@ public partial class BoardPanel : Panel
 
     public Color AliveColor
     {
-        get => aliveBrush.Color;
+        get => D2DColor.ToGDIColor(aliveBrush.Color);
         set
         {
             if (value == Color.Empty)
                 return;
 
-            aliveBrush.Color = value;
+            aliveBrush.Color = D2DColor.FromGDIColor(value);
             DrawBoard();
         }
     }
@@ -65,26 +70,26 @@ public partial class BoardPanel : Panel
 
     public Color DeadColor
     {
-        get => deadBrush.Color;
+        get => D2DColor.ToGDIColor(deadBrush.Color);
         set
         {
             if (value == Color.Empty)
                 return;
 
-            deadBrush.Color = value;
+            deadBrush.Color = D2DColor.FromGDIColor(value);
             DrawBoard();
         }
     }
 
     public Color GridColor
     {
-        get => gridPen.Color;
+        get => D2DColor.ToGDIColor(gridPen.Color);
         set
         {
             if (value == Color.Empty)
                 return;
 
-            gridPen.Color = value;
+            //gridPen.Color = D2DColor.FromGDIColor(value);
 
             if (ShowGrid)
                 DrawGrid();
@@ -96,18 +101,18 @@ public partial class BoardPanel : Panel
     {
         InitializeComponent();
 
-        aliveBrush = new SolidBrush(DefaultAliveColor);
-        deadBrush = new SolidBrush(DefaultDeadColor);
-        gridPen = new Pen(DefaultGridColor);
+        aliveBrush = Device.CreateSolidColorBrush(D2DColor.FromGDIColor(DefaultAliveColor))!;
+        deadBrush = Device.CreateSolidColorBrush(D2DColor.FromGDIColor(DefaultAliveColor))!;
+        gridPen = Device.CreatePen(D2DColor.FromGDIColor(DefaultGridColor))!;
         oldSize = Size;
         _board = new(defaultBoardSize, defaultBoardSize);
     }
 
     public void SetAllColors(Color alive, Color dead, Color grid, bool redraw = true)
     {
-        aliveBrush.Color = alive;
-        deadBrush.Color = dead;
-        gridPen.Color = grid;
+        aliveBrush.Color = D2DColor.FromGDIColor(alive);
+        deadBrush.Color = D2DColor.FromGDIColor(dead);
+        //gridPen.Color = D2DColor.FromGDIColor(grid);
 
         if (redraw)
             DrawBoard();
@@ -187,61 +192,55 @@ public partial class BoardPanel : Panel
 
     public void Cycle()
     {
-        using var g = CreateGraphics();
-        void HandleChange(object? _, Point p) => UpdateCell(p.X, p.Y, g);
-
-        Board.CycleCellChanged += HandleChange;
         Board.Cycle();
-        Board.CycleCellChanged -= HandleChange;
+        DrawBoard();
     }
 
     #region Drawing
     /// <summary>
     /// Erases the board.
     /// </summary>
-    private void Erase(Graphics? g = null)
+    private void Erase()
     {
-        var graphics = g ?? CreateGraphics();
-        graphics.FillRectangle(deadBrush, new(Point.Empty, Size));
-
-        if (g is null)
-            graphics.Dispose();
+        graphics?.FillRectangle(new D2DRect(0f, 0f, Size.Width, Size.Height), deadBrush);
     }
 
     /// <summary>
     /// Erases and fully draws the current board state.
     /// </summary>
-    private void DrawBoard(Graphics? g = null)
+    private void DrawBoard(bool partialRender = false)
     {
-        var graphics = g ?? CreateGraphics();
-        DrawBoardRegion(new(Point.Empty, Size), graphics);
+        if (!partialRender)
+            graphics?.BeginRender();
 
-        if (g is null)
-            graphics.Dispose();
+        DrawBoardRegion(new Rectangle(Point.Empty, Size));
+
+        if (!partialRender)
+            graphics?.EndRender();
     }
 
     /// <summary>
     /// Draws a region of the board state using an existing <see cref="Graphics"/> instance.
     /// </summary>
     /// <param name="pixelRegion">Region to draw in pixels</param>
-    private void DrawBoardRegion(Rectangle pixelRegion, Graphics g)
+    private void DrawBoardRegion(Rectangle pixelRegion)
     {
-        g.FillRectangle(deadBrush, pixelRegion);
+        graphics?.FillRectangle(pixelRegion, deadBrush);
 
         var cellRegion = MapPixelRegionToCellRegion(pixelRegion);
 
         if (ShowGrid)
-            DrawGridRegion(cellRegion, g);
+            DrawGridRegion(cellRegion);
 
         for (int x = cellRegion.Left; x < cellRegion.Right && x < Board.Width; x++)
             for (int y = cellRegion.Top; y < cellRegion.Bottom && y < Board.Height; y++)
                 if (Board.Cells[x, y])
-                    DrawAliveCell(x, y, g);
+                    DrawAliveCell(x, y);
     }
 
-    private void DrawAliveCell(int x, int y, Graphics g) => DrawCellBase(x, y, g, aliveBrush);
-    private void DrawDeadCell(int x, int y, Graphics g) => DrawCellBase(x, y, g, deadBrush);
-    private void DrawCellBase(int x, int y, Graphics g, Brush brush)
+    private void DrawAliveCell(int x, int y) => DrawCellBase(x, y, aliveBrush);
+    private void DrawDeadCell(int x, int y) => DrawCellBase(x, y, deadBrush);
+    private void DrawCellBase(int x, int y, D2DBrush brush)
     {
         x *= CellSize;
         y *= CellSize;
@@ -257,46 +256,48 @@ public partial class BoardPanel : Panel
             height--;
         }
 
-        g.FillRectangle(brush, x, y, width, height);
-    }
-    private void InvertCell(int x, int y)
-    {
-        using var g = CreateGraphics();
-
-        Board.InvertCell(x, y);
-        UpdateCell(Math.Clamp(x, 0, Board.Width - 1), Math.Clamp(y, 0, Board.Height - 1), g);
-    }
-    private void UpdateCell(int x, int y, Graphics g)
-    {
-        if (Board.Cells[x, y])
-            DrawAliveCell(x, y, g);
-        else
-            DrawDeadCell(x, y, g);
+        graphics?.FillRectangle(new D2DRect(x, y, width, height), brush);
     }
 
     /// <summary>
     /// Draws the full grid.
     /// </summary>
-    private void DrawGrid()
+    private void DrawGrid(bool partialRender = false)
     {
-        using var g = CreateGraphics();
-        DrawGridRegion(new(Point.Empty, Board.Size), g);
+        if (!partialRender)
+            graphics?.BeginRender();
+
+        DrawGridRegion(new(Point.Empty, Board.Size));
+
+        if (!partialRender)
+            graphics?.EndRender();
     }
     /// <summary>
     /// Draws the grid in a region of the panel.
     /// </summary>
     /// <param name="cellRegion">Region to draw in cells</param>
-    private void DrawGridRegion(Rectangle cellRegion, Graphics g)
+    private void DrawGridRegion(Rectangle cellRegion)
     {
         for (int x = cellRegion.Left; x <= cellRegion.Right; x += 2)
-            g.DrawRectangle(gridPen, x * CellSize, 0, CellSize, cellRegion.Bottom * CellSize);
+            graphics?.DrawRectangle(new D2DRect(x * CellSize, 0, CellSize, cellRegion.Bottom * CellSize), gridPen);
         for (int y = cellRegion.Top; y <= cellRegion.Bottom; y += 2)
-            g.DrawRectangle(gridPen, 0, y * CellSize, cellRegion.Right * CellSize, CellSize);
+            graphics?.DrawRectangle(new D2DRect(0, y * CellSize, cellRegion.Right * CellSize, CellSize), gridPen);
     }
     #endregion
 
     #region EventHandlers
-    protected override void OnPaint(PaintEventArgs pe) => DrawBoardRegion(pe.ClipRectangle, pe.Graphics);
+    protected override void OnRender(D2DGraphics g)
+    {
+        graphics ??= g;
+
+        g?.BeginRender();
+
+        DrawGrid(true);
+        DrawBoard(true);
+
+        g?.EndRender();
+    }
+
     protected override void OnMouseDown(MouseEventArgs e)
     {
         dragging = true;
@@ -305,7 +306,10 @@ public partial class BoardPanel : Panel
         using var g = CreateGraphics();
 
         dragInitialState = Board.Cells[cell.X, cell.Y];
-        InvertCell(cell.X, cell.Y);
+
+        Board.InvertCell(cell.X, cell.Y);
+
+        DrawBoard();
     }
     protected override void OnMouseMove(MouseEventArgs e)
     {
@@ -341,7 +345,10 @@ public partial class BoardPanel : Panel
         }
 
         dragLastPosition = cell;
-        InvertCell(cell.X, cell.Y);
+
+        Board.InvertCell(cell.X, cell.Y);
+        DrawBoard();
+
     }
     protected override void OnMouseUp(MouseEventArgs e) => dragging = false;
 
