@@ -43,7 +43,12 @@ public class Board
             ref bool cell = ref Cells[x, y];
 
             if (cell != value)
+            {
+                searchZone[x, y] = true;
+                UpdateSearchZone(x, y);
+
                 UpdatePopulation(value);
+            }
 
             Cells[x, y] = value;
 
@@ -98,11 +103,7 @@ public class Board
     /// Inverts the state of a cell and updates the population.
     /// </summary>
     public void InvertCell(int x, int y)
-    {
-        this[x, y] = !this[x, y];
-        searchZone[x, y] = true;
-        UpdateSearchZone(x, y);
-    }
+        => this[x, y] = !this[x, y];
 
     private void UpdateSearchZone(int x, int y)
     {
