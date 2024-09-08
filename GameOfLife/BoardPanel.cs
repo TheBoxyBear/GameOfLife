@@ -187,6 +187,9 @@ public partial class BoardPanel : D2DControl
 
     public void Cycle()
     {
+        void HandleChange(object? _, Point p) => UpdateCell(p.X, p.Y);
+
+        Board.StatusChanged += HandleChange;
         Board.Cycle();
         Render(DrawBoard);
     }

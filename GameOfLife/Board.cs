@@ -1,12 +1,10 @@
-﻿using static System.Windows.Forms.AxHost;
-
-namespace GameOfLife;
+﻿namespace GameOfLife;
 
 public class Board
 {
     private readonly int XLimit, YLimit;
 
-    public event EventHandler<Point>? CycleCellChanged;
+    public event EventHandler<Point>? StatusChanged;
 
     /// <summary>
     /// Dimensions of the board in cell count
@@ -48,6 +46,8 @@ public class Board
                 UpdatePopulation(value);
 
             Cells[x, y] = value;
+
+            StatusChanged?.Invoke(this, new(x, y));
         }
     }
 
@@ -88,17 +88,18 @@ public class Board
         UpdateSearchZone(x, y);
 
         if (cycling)
-            CycleCellChanged?.Invoke(this, new(x, y));
+            StatusChanged?.Invoke(this, new(x, y));
     }
 
     private void UpdatePopulation(bool newState)
         => Population += (uint)(newState ? 1 : -1);
+
     /// <summary>
     /// Inverts the state of a cell and updates the population.
     /// </summary>
     public void InvertCell(int x, int y)
     {
-        Cells[x, y] = !Cells[x, y];
+        this[x, y] = !this[x, y];
         searchZone[x, y] = true;
         UpdateSearchZone(x, y);
     }
