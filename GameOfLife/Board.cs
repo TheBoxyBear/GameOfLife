@@ -93,12 +93,13 @@ public class Board
 
     private void UpdatePopulation(bool newState)
         => Population += (uint)(newState ? 1 : -1);
+
     /// <summary>
     /// Inverts the state of a cell and updates the population.
     /// </summary>
     public void InvertCell(int x, int y)
     {
-        Cells[x, y] = !Cells[x, y];
+        this[x, y] = !this[x, y];
         searchZone[x, y] = true;
         UpdateSearchZone(x, y);
     }
