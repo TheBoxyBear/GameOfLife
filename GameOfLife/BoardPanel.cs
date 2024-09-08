@@ -222,7 +222,7 @@ public partial class BoardPanel : D2DControl
 
         for (int x = cellRegion.Left; x < cellRegion.Right && x < Board.Width; x++)
             for (int y = cellRegion.Top; y < cellRegion.Bottom && y < Board.Height; y++)
-                if (Board.Cells[x, y])
+                if (Board[x, y])
                     DrawAliveCell(x, y);
     }
 
@@ -255,7 +255,7 @@ public partial class BoardPanel : D2DControl
 
     private void UpdateCell(int x, int y)
     {
-        if (Board.Cells[x, y])
+        if (Board[x, y])
             DrawAliveCell(x, y);
         else
             DrawDeadCell(x, y);
@@ -298,8 +298,7 @@ public partial class BoardPanel : D2DControl
         var cell = MapPixelToCell(e.Location);
         using var g = CreateGraphics();
 
-        dragInitialState = Board.Cells[cell.X, cell.Y];
-
+        dragInitialState = Board[cell.X, cell.Y];
         InvertCell(cell.X, cell.Y);
     }
 
@@ -313,7 +312,7 @@ public partial class BoardPanel : D2DControl
         if (cell.X < 0 || cell.X > Board.Width - 1 || cell.Y < 0 || cell.Y > Board.Height - 1)
             return;
 
-        if (cell == dragLastPosition || Board.Cells[cell.X, cell.Y] != dragInitialState)
+        if (cell == dragLastPosition || Board[cell.X, cell.Y] != dragInitialState)
             return;
 
         if (dragLocked)

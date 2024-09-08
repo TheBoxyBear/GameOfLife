@@ -1,4 +1,6 @@
-﻿namespace GameOfLife;
+﻿using static System.Windows.Forms.AxHost;
+
+namespace GameOfLife;
 
 public class Board
 {
@@ -10,26 +12,44 @@ public class Board
     /// Dimensions of the board in cell count
     /// </summary>
     public Size Size { get; }
+
     /// <summary>
     /// Width of the board
     /// </summary>
     public int Width => Size.Width;
+
     /// <summary>
     /// Height of the board
     /// </summary>
     public int Height => Size.Height;
 
     public ulong Generation { get; private set; }
+
     public uint Population { get; private set; }
 
     /// <summary>
     /// State of cells where <see langword="true"/> is a living cell
     /// </summary>
-    public bool[,] Cells { get; private set; }
+    private bool[,] Cells { get; }
+
     /// <summary>
     /// Cells from the previous generation
     /// </summary>
-    public bool[,] OldCells { get; private set; }
+    private  bool[,] OldCells { get; }
+
+    public bool this[int x, int y]
+    {
+        get => Cells[x, y];
+        set
+        {
+            ref bool cell = ref Cells[x, y];
+
+            if (cell != value)
+                UpdatePopulation(value);
+
+            Cells[x, y] = value;
+        }
+    }
 
     #region Optimization
     private bool cycling = false;
@@ -62,13 +82,17 @@ public class Board
 
     private void SetCellUnsafe(int x, int y, bool state)
     {
-        Population += (uint)(state ? 1 : -1);
         Cells[x, y] = state;
+
+        UpdatePopulation(state);
         UpdateSearchZone(x, y);
 
         if (cycling)
             CycleCellChanged?.Invoke(this, new(x, y));
     }
+
+    private void UpdatePopulation(bool newState)
+        => Population += (uint)(newState ? 1 : -1);
     /// <summary>
     /// Inverts the state of a cell and updates the population.
     /// </summary>
@@ -81,19 +105,19 @@ public class Board
 
     private void UpdateSearchZone(int x, int y)
     {
-        var left = WrapIndex(x - 1, XLimit);
-        var right = WrapIndex(x + 1, XLimit);
-        var top = WrapIndex(y - 1, YLimit);
+        var left   = WrapIndex(x - 1, XLimit);
+        var right  = WrapIndex(x + 1, XLimit);
+        var top    = WrapIndex(y - 1, YLimit);
         var bottom = WrapIndex(y + 1, YLimit);
 
-        searchZone[left, y] = true;
-        searchZone[right, y] = true;
-        searchZone[x, top] = true;
-        searchZone[x, bottom] = true;
+        searchZone[left, y]       = true;
+        searchZone[right, y]      = true;
+        searchZone[x, top]        = true;
+        searchZone[x, bottom]     = true;
 
-        searchZone[left, top] = true;
-        searchZone[left, bottom] = true;
-        searchZone[right, top] = true;
+        searchZone[left, top]     = true;
+        searchZone[left, bottom]  = true;
+        searchZone[right, top]    = true;
         searchZone[right, bottom] = true;
 
         UpdatePresence(y);
@@ -141,7 +165,7 @@ public class Board
             if (!oldSearchZone[x, y])
                 return;
 
-            var n = LivingNeighbours(x, y);
+            var n = LivingNeighbors(x, y);
 
             switch (n)
             {
@@ -154,6 +178,7 @@ public class Board
                     break;
             }
         }
+
         void CheckRow(int y)
         {
             unchecked
@@ -169,7 +194,8 @@ public class Board
                     CheckSetCell(x, y);
             }
         }
-        int LivingNeighbours(int x, int y)
+
+        int LivingNeighbors(int x, int y)
         {
             unchecked
             {
@@ -199,6 +225,7 @@ public class Board
                 return aliveCount;
             }
         }
+
         CellRange SetLimits(CellRange presence, int limit, Action<int> preliminaryCheck)
         {
             int start = presence.Start, end = presence.End;
