@@ -42,6 +42,8 @@ public partial class MainForm : Form
 
         panelFormOffset = new Size(Width - panBoard.Width, Height - panBoard.Height);
         panBoard.ResetColors(false);
+        panBoard.Board.StatusChanged += Board_StatusChanged;
+
         AdjustSize();
         UpdateSizeText();
     }
@@ -52,16 +54,22 @@ public partial class MainForm : Form
         panBoard.AdjustSize(false);
         SizeToPanel();
     }
+
     private void SizeToPanel() => Size = panBoard.Size + panelFormOffset;
+
     /// <summary>
     /// Sets the size of the board.
     /// </summary>
     private void SetBoardSize(int width, int height)
     {
         panBoard.Board = new(width, height);
+        panBoard.Board.StatusChanged += Board_StatusChanged;
+
         SizeToPanel();
         UpdateSizeText();
+        UpdateStatusText();
     }
+
     private void UpdateSizeText() => Text = $"Game of Life ({panBoard.Board.Width}x{panBoard.Board.Height})";
     private void UpdateStatusText() => Status_State.Text = $"Gen: {panBoard.Board.Generation} Pop: {panBoard.Board.Population}";
     #endregion
@@ -93,6 +101,7 @@ public partial class MainForm : Form
         Menu_StartStop.Text = "Stop";
         Timer.Start();
     }
+
     /// <summary>
     /// Stops the simulation.
     /// </summary>
@@ -121,6 +130,7 @@ public partial class MainForm : Form
     }
 
     private void MainForm_ResizeEnd(object sender, EventArgs e) => AdjustSize();
+
     private void Timer_Tick(object sender, EventArgs e) => Cycle();
 
     #region Menu bar
@@ -143,7 +153,10 @@ public partial class MainForm : Form
     private void Menu_Reset_Click(object sender, EventArgs e)
     {
         StopSimulation();
+
         panBoard.Board = new(panBoard.Board.Size);
+        panBoard.Board.StatusChanged += Board_StatusChanged;
+
         UpdateStatusText();
     }
 
@@ -184,6 +197,9 @@ public partial class MainForm : Form
     }
 
     private void Menu_Colors_Reset_Click(object sender, EventArgs e) => panBoard.ResetColors(true);
+
+    private void Board_StatusChanged(object? sender, Point args)
+        => UpdateStatusText();
     #endregion
     #endregion
 }

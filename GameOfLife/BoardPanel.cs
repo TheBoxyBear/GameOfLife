@@ -190,9 +190,9 @@ public partial class BoardPanel : Panel
         using var g = CreateGraphics();
         void HandleChange(object? _, Point p) => UpdateCell(p.X, p.Y, g);
 
-        Board.CycleCellChanged += HandleChange;
+        Board.StatusChanged += HandleChange;
         Board.Cycle();
-        Board.CycleCellChanged -= HandleChange;
+        Board.StatusChanged -= HandleChange;
     }
 
     #region Drawing
