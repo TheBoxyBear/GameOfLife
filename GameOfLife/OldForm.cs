@@ -42,7 +42,7 @@ public partial class OldForm : Form
         if (!simulationRunning)
         {
             var cell = sender as CellPanel;
-            board.Cells[cell!.CellLocation.X, cell.CellLocation.Y] = cell.IsAlive = !cell.IsAlive;
+            board[cell!.CellLocation.X, cell.CellLocation.Y] = cell.IsAlive = !cell.IsAlive;
         }
     }
     private void Menu_Reset_Click(object sender, EventArgs e)
@@ -50,7 +50,7 @@ public partial class OldForm : Form
         StopSimulation();
 
         foreach (CellPanel cell in cells.SelectMany(c => c))
-            board.Cells[cell.CellLocation.X, cell.CellLocation.Y] = cell.IsAlive = false;
+            board[cell.CellLocation.X, cell.CellLocation.Y] = cell.IsAlive = false;
     }
     private void Timer_Tick(object sender, EventArgs e)
     {
@@ -58,7 +58,7 @@ public partial class OldForm : Form
 
         // Update the panels
         foreach (CellPanel cell in cells.SelectMany(c => c))
-            cell.IsAlive = board.Cells[cell.CellLocation.X, cell.CellLocation.Y];
+            cell.IsAlive = board[cell.CellLocation.X, cell.CellLocation.Y];
     }
 
 

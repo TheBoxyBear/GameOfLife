@@ -235,7 +235,7 @@ public partial class BoardPanel : Panel
 
         for (int x = cellRegion.Left; x < cellRegion.Right && x < Board.Width; x++)
             for (int y = cellRegion.Top; y < cellRegion.Bottom && y < Board.Height; y++)
-                if (Board.Cells[x, y])
+                if (Board[x, y])
                     DrawAliveCell(x, y, g);
     }
 
@@ -268,7 +268,7 @@ public partial class BoardPanel : Panel
     }
     private void UpdateCell(int x, int y, Graphics g)
     {
-        if (Board.Cells[x, y])
+        if (Board[x, y])
             DrawAliveCell(x, y, g);
         else
             DrawDeadCell(x, y, g);
@@ -304,7 +304,7 @@ public partial class BoardPanel : Panel
         var cell = MapPixelToCell(e.Location);
         using var g = CreateGraphics();
 
-        dragInitialState = Board.Cells[cell.X, cell.Y];
+        dragInitialState = Board[cell.X, cell.Y];
         InvertCell(cell.X, cell.Y);
     }
     protected override void OnMouseMove(MouseEventArgs e)
@@ -318,7 +318,7 @@ public partial class BoardPanel : Panel
         if (cell.X < 0 || cell.X > Board.Width - 1 || cell.Y < 0 || cell.Y > Board.Height - 1)
             return;
 
-        if (cell == dragLastPosition || Board.Cells[cell.X, cell.Y] != dragInitialState)
+        if (cell == dragLastPosition || Board[cell.X, cell.Y] != dragInitialState)
             return;
 
         if (dragLocked)
