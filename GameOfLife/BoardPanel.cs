@@ -296,7 +296,6 @@ public partial class BoardPanel : D2DControl
         dragging = true;
 
         var cell = MapPixelToCell(e.Location);
-        using var g = CreateGraphics();
 
         dragInitialState = Board[cell.X, cell.Y];
         InvertCell(cell.X, cell.Y);
