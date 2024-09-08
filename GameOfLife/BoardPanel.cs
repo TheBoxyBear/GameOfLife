@@ -236,7 +236,7 @@ public partial class BoardPanel : D2DControl
         var width = CellSize;
         var height = CellSize;
 
-        if (ShowGrid) // Draw the cell one pixel thiner in every direction to not cover the gird.
+        if (ShowGrid) // Draw the cell one pixel thinner in every direction to not cover the gird.
         {
             x++;
             y++;
