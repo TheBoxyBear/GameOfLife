@@ -338,7 +338,7 @@ public partial class BoardPanel : D2DControl
 
         Board.InvertCell(cell.X, cell.Y);
 
-        Render(() => DrawCellBase(cell.X, cell.Y, Board.Cells[cell.X, cell.Y] ? aliveBrush : deadBrush));
+        Render(() => DrawCellBase(cell.X, cell.Y, Board[cell.X, cell.Y] ? aliveBrush : deadBrush));
     }
 
     protected override void OnMouseUp(MouseEventArgs e) => dragging = false;
